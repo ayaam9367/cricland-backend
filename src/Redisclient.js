@@ -6,7 +6,7 @@ const redisClient = new Redis({
 }); 
 
 const pub = new Redis({
-    host: process.env.REDIS_HOST,   
+    host: process.env.REDIS_HOST,    
     port: process.env.REDIS_PORT
 });
 
