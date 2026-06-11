@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: "Cricbackend-live-new"
+    restart: always
+    build: .
+    ports:
+      - "3302:3302"
+      - "4301:3302"
+    depends_on:
+      - redis
+      - mongo
+    env_file:
+      - .env.development
+    networks:
+      - app-network
+
+  mongo:
+    container_name: myapp-mongo
+    image: "mongo:latest"
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - app-network
+
+  redis:
+    container_name: myapp-redis
+    image: "redis/redis-stack:latest"
+    ports:
+      - "6380:6379"
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
