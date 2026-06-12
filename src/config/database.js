@@ -16,7 +16,9 @@ const connectDatabase = async () => {
             setTimeout(() => {
                 if (mongoose.connection.readyState === 0) { // 0 means disconnected
                     console.warn('🛠️ Mongoose still disconnected, attempting manual reconnection...');
-                    connectDatabase();
+                    connectDatabase().catch(err => {
+                        console.error("Reconnect Failed: ", err);
+                    });
                 }
             }, 5000);
         });

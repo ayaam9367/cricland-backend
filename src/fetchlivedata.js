@@ -87,7 +87,7 @@ const fetchLiveMatchData = async (matchId) => {
 
 async function pollLiveData() {
   if (matchIds.size === 0) {
-    console.log("No active matches to poll");
+    // console.log("No active matches to poll");
     return;
   }
 
