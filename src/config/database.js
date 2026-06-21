@@ -32,5 +32,15 @@ const connectDatabase = async () => {
 module.exports = connectDatabase;
 
 /**
+ * Issue : I don't think mongodb connects on the start of the server if redis is disconnected
+ * Replication steps : 
+ * 1. Stop the redis container
+ * 2. start the server
+ * 3. You will get ECONREFUSED for port 6379 (redis)
+ * 4. Test if mongodb is connected, if not, correct it
+ * 5. Start the redis container
+ * 6. Repeat Step 4
+ * 
+ * Issue : Connect database is not a solid function, can improve it. 
  * 
  */

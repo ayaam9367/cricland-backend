@@ -196,8 +196,6 @@ exports.UpdateCurrentSeriesMatch = async (req, res) => {
   }
 };
 
-
-
 exports.getAllSeries= async (req, res) => {
   const activity = "Get All Series Match";
   const { page = 1, limit = 10, pagination = false , status ='' , name='' } = req?.query || {};
@@ -239,7 +237,6 @@ exports.getAllSeries= async (req, res) => {
     return handleError(res, error, activity);
   }
 };
-
 
 exports.UpdateSeries = async (req, res) => {
   const activity = "Update All Series Match";

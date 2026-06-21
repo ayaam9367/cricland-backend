@@ -12,8 +12,4 @@ router.get('/currentseries' ,Matchcontroller.Currentseries)
 router.get('/currentseries/:cid' , Matchcontroller.SeriesAllMatch)
 router.get('/:matchId' , Matchcontroller.handleWebsocketreq)
 
-
-
-
-
 module.exports = router 
