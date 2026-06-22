@@ -2,21 +2,23 @@ const axios = require("axios");
 const mongoose = require("mongoose");
 const filterMatchData = require("../filterData/filterMatchData");
 const Tournamenttl = require("../../Models/tournament");
-const GetFetchData = require('../fetchData/fetchMatchData')
-var cron = require('node-cron');
+const GetFetchData = require("../fetchData/fetchMatchData");
+var cron = require("node-cron");
 const { currentSeries } = require("./storeSeriesData");
 
 const apiDataSchema = new mongoose.Schema(
   {
     id: Number,
   },
-  { strict: false }
-)
+  { strict: false },
+);
 
 function getModel(collectionName) {
-  return mongoose.models[collectionName] || mongoose.model(collectionName, apiDataSchema, collectionName);
+  return (
+    mongoose.models[collectionName] ||
+    mongoose.model(collectionName, apiDataSchema, collectionName)
+  );
 }
-
 
 async function getAllMatches(cid) {
   try {
@@ -25,7 +27,7 @@ async function getAllMatches(cid) {
       console.warn(`No matches found for competition ID: ${cid}`);
       return [];
     }
- console.log(matches)
+    //  console.log(matches)
     let tournament = await Tournamenttl.findOne({ cid });
 
     if (!tournament) {
@@ -33,7 +35,7 @@ async function getAllMatches(cid) {
         cid,
         name: matches[0].competition.title,
         status: matches[0].competition.status,
-        isfeatured:false,
+        isfeatured: false,
         matchs: [],
       });
     }
@@ -41,46 +43,44 @@ async function getAllMatches(cid) {
     for (const match of matches) {
       // console.log(match)
       const dateStr = match.date_start_ist.includes("+05:30")
-    ? match.date_start_ist
-    : `${match.date_start_ist}+05:30`; 
+        ? match.date_start_ist
+        : `${match.date_start_ist}+05:30`;
 
-  
-  const matchStartDate = new Date(dateStr);
+      const matchStartDate = new Date(dateStr);
       const matchData = {
         matchId: match.match_id.toString(),
         matchTeama: {
           name: match.teama.name,
-          shortname:match.teama.short_name,
+          shortname: match.teama.short_name,
           logo: match.teama.logo_url,
         },
         matchTeamb: {
           name: match.teamb.name,
-          shortname:match.teamb.short_name,
+          shortname: match.teamb.short_name,
           logo: match.teamb.logo_url,
         },
         matchStatus: match.status_str,
-        matchStartDate: matchStartDate.toISOString(), 
-    time: matchStartDate.toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-      timeZone: "Asia/Kolkata", // Format time in IST
-    }),
+        matchStartDate: matchStartDate.toISOString(),
+        time: matchStartDate.toLocaleTimeString("en-IN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+          timeZone: "Asia/Kolkata", // Format time in IST
+        }),
         matchVenue: `${match.venue.name}, ${match.venue.location}, ${match.venue.country}`,
-        urls: {}, 
+        urls: {},
       };
-// console.log(matchData)
+      // console.log(matchData)
       const existingMatchIndex = tournament.matchs.findIndex(
-        (m) => m.matchId === matchData.matchId
+        (m) => m.matchId === matchData.matchId,
       );
 
       if (existingMatchIndex >= 0) {
-  
         tournament.matchs[existingMatchIndex] = {
-          ...tournament.matchs[existingMatchIndex].toObject(), 
-          matchStatus: matchData.matchStatus, 
+          ...tournament.matchs[existingMatchIndex].toObject(),
+          matchStatus: matchData.matchStatus,
           matchStartDate: matchData.matchStartDate,
-          time: matchData.time, 
+          time: matchData.time,
         };
       } else {
         tournament.matchs.push(matchData);
@@ -94,8 +94,6 @@ async function getAllMatches(cid) {
     throw new Error(`Error while fetching all matches: ${error}`);
   }
 }
-
-
 
 async function getMatchInfo() {
   try {
@@ -114,7 +112,7 @@ async function getMatchInfo() {
         const url = `https://rest.entitysport.com/v2/matches/${matchId}/info?token=${ACCESS_TOKEN}`;
         const response = await axios.get(url);
         return response.data.response;
-      })
+      }),
     );
 
     // Execute all requests with rate limiting
@@ -126,12 +124,12 @@ async function getMatchInfo() {
       .filter((result) => result.status === "fulfilled")
       .map((result) => result.value);
     const failedDetails = results.filter(
-      (result) => result.status === "rejected"
+      (result) => result.status === "rejected",
     );
     if (failedDetails.length > 0) {
       console.log(failedDetails);
       console.warn(
-        `Some requests failed : ${failedDetails.length} errors reported`
+        `Some requests failed : ${failedDetails.length} errors reported`,
       );
     }
 
@@ -165,21 +163,16 @@ async function matchToday() {
   try {
     const Model = getModel(collectionName);
 
-    
     const matches = await filterMatchData.matchToday();
-    
 
-    
     if (matches.error) {
       console.error(`${activity} Error while filtering match data`);
       return;
     }
 
-    
     if (!matches || !matches.result || matches.result.length === 0) {
       console.warn(`${activity} No matches to store`);
 
-      
       const collectionExists = await mongoose.connection.db
         .listCollections({ name: collectionName })
         .hasNext();
@@ -188,17 +181,15 @@ async function matchToday() {
         console.log(`${activity} Created empty collection: ${collectionName}`);
       }
 
-      return; 
+      return;
     }
 
-    
     for (const match of matches.result) {
       try {
-
         await Model.findOneAndUpdate(
-          { match_id: match.match_id }, 
-          { $set: match }, 
-          { upsert: true } 
+          { match_id: match.match_id },
+          { $set: match },
+          { upsert: true },
         );
         // console.log(
         //   `${activity} Successfully processed match with id: ${match.match_id}`
@@ -206,7 +197,7 @@ async function matchToday() {
       } catch (updateError) {
         console.error(
           `${activity} Error updating/inserting match with id: ${match.match_id}`,
-          updateError
+          updateError,
         );
       }
     }
@@ -217,7 +208,6 @@ async function matchToday() {
     return error;
   }
 }
-
 
 // cron.schedule("* * * * * *", async () => {
 //   console.log("⏳ Running cron job...");
@@ -231,10 +221,4 @@ cron.schedule("0 */2 * * *", async () => {
   console.log("✅ Cron job completed.");
 });
 
-
-
-
-
-
-
-module.exports = { matchToday , getModel , getAllMatches };
+module.exports = { matchToday, getModel, getAllMatches };

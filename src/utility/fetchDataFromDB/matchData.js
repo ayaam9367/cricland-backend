@@ -6,7 +6,7 @@ const apiDataSchema = new mongoose.Schema(
   {
     id: Number,
   },
-  { strict: false }
+  { strict: false },
 );
 
 function getModel(collectionName) {
@@ -14,10 +14,10 @@ function getModel(collectionName) {
 }
 
 /**
- * define the model you want to fetch the data from
- * get the curr_time
- * find matches where curr_time >= timestamp_start && curr_time <= timestamp_end
- * sort them based on timestamp_start
+ * this function fetches all the matches that are happening today from the DB
+ * for these matches, at any point in time, we categorise them in 
+ *    live, scheduled, completed 
+ *    based on their start and end time
  */
 
 async function liveMatches() {
@@ -25,46 +25,51 @@ async function liveMatches() {
   const collectionName = "match_today";
   try {
     const todaymatch1 = getModel(collectionName);
-  const todayMatch = await todaymatch1.find();
+    const todayMatch = await todaymatch1.find();
 
-  const liveMatches = [];
-  const scheduledMatches = [];
-  const completedMatches = [];
+    const liveMatches = [];
+    const scheduledMatches = [];
+    const completedMatches = [];
     const currentTimestamp = Date.now(); // Current time in milliseconds
-  // console.log("Current Timestamp:", currentTimestamp);
-  // console.log("Current Time (IST):", new Date(currentTimestamp).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+    // console.log("Current Timestamp:", currentTimestamp);
+    // console.log("Current Time (IST):", new Date(currentTimestamp).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
 
-  todayMatch[0].result.forEach(match => {
-    const matchStartTime = match.timestamp_start * 1000; // Convert to milliseconds
-    const matchEndTime = match.timestamp_end * 1000; // Convert to milliseconds
+    todayMatch[0].result.forEach((match) => {
+      const matchStartTime = match.timestamp_start * 1000; // Convert to milliseconds
+      const matchEndTime = match.timestamp_end * 1000; // Convert to milliseconds
 
-    // console.log(`Match ${match.match_id}: Start=${new Date(matchStartTime).toLocaleString("en-US", { timeZone: "Asia/Kolkata" })}, End=${new Date(matchEndTime).toLocaleString("en-US", { timeZone: "Asia/Kolkata" })}`);
+      // console.log(`Match ${match.match_id}: Start=${new Date(matchStartTime).toLocaleString("en-US", { timeZone: "Asia/Kolkata" })}, End=${new Date(matchEndTime).toLocaleString("en-US", { timeZone: "Asia/Kolkata" })}`);
 
-    // Determine the match status based on the current timestamp
-    if (currentTimestamp >= matchStartTime && currentTimestamp <= matchEndTime) {
-      // Match is live
-      // console.log(todayMatch)
-      if (match.status_str !== "Completed") {
-        liveMatches.push(match);
-        CurrentlyLiveMatch.push(String(match.match_id));
-      } else {
+      // Determine the match status based on the current timestamp
+      if (
+        currentTimestamp >= matchStartTime &&
+        currentTimestamp <= matchEndTime
+      ) {
+        // Match is live
+        // console.log(todayMatch)
+        if (match.status_str !== "Completed") {
+          liveMatches.push(match);
+          CurrentlyLiveMatch.push(String(match.match_id));
+        } else {
+          completedMatches.push(match);
+        }
+        // console.log(`Match ${match.match_id} is LIVE.`);
+      } else if (currentTimestamp < matchStartTime) {
+        // Match is scheduled (upcoming)
+        scheduledMatches.push(match);
+        // console.log(`Match ${match.match_id} is SCHEDULED.`);
+      } else if (currentTimestamp > matchEndTime) {
+        // Match is completed
         completedMatches.push(match);
+        // console.log(`Match ${match.match_id} is COMPLETED.`);
       }
-      // console.log(`Match ${match.match_id} is LIVE.`);
-    } else if (currentTimestamp < matchStartTime) {
-      // Match is scheduled (upcoming)
-      scheduledMatches.push(match);
-      // console.log(`Match ${match.match_id} is SCHEDULED.`);
-    } else if (currentTimestamp > matchEndTime) {
-      // Match is completed
-      completedMatches.push(match);
-      // console.log(`Match ${match.match_id} is COMPLETED.`);
-    }
-  });
-    return {liveMatches , completedMatches , scheduledMatches};
+    });
+    return { liveMatches, completedMatches, scheduledMatches };
   } catch (error) {
-    console.error(`${activity} Error while fetching live matches: ${error.message}`);
-    return {error}; //see if its a good idea to return the error object or not. 
+    console.error(
+      `${activity} Error while fetching live matches: ${error.message}`,
+    );
+    return { error }; //see if its a good idea to return the error object or not.
   }
 }
 
@@ -97,4 +102,4 @@ async function liveMatches() {
 //     }
 // }
 
-module.exports = {liveMatches};
+module.exports = { liveMatches };

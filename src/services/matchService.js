@@ -154,6 +154,7 @@ exports.getAlltodaymatch = async (activity, { page, limit, pagination, search=''
     },
   };
 };
+
 exports.getMatchInfo = async (activity, matchId) => {
   const rediskey = `match:${matchId}`;
   let isLive = CurrentlyLiveMatch.has(matchId);

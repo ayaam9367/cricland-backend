@@ -4,8 +4,8 @@ exports.cricRankingData = async (activity) => {
   const collectionName = "cric_ranking";
 
   /**
-   * This checks the mongodb database whether the collectiion exists but here
-   *  we need to check the internal registery of mongoose to see if the collection with this
+   * This checks the mongodb database whether the collection exists but here
+   * we need to check the internal registery of mongoose to see if the collection with this
    * name has been defined already, hence we don't use the method
    */
   // const collectionExists = await mongoose.connection.db

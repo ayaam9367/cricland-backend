@@ -11,19 +11,19 @@ async function storeCricRanking() {
   try {
     const dataToStore = await fetchCricRanking(); //we are not doing any filtering of this data
     let cricRankingModel;
-    if(mongoose.models[collectionName]){
+    if (mongoose.models[collectionName]) {
       cricRankingModel = mongoose.model(collectionName);
     } else {
       const cricRankingSchema = new mongoose.Schema(
         {},
         {
           strict: false,
-          timestamps: true
-        }
+          timestamps: true,
+        },
       );
       cricRankingModel = mongoose.model(collectionName, cricRankingSchema);
     }
-    
+
     await cricRankingModel.findOneAndReplace({}, dataToStore, {
       upsert: true,
       new: true,
@@ -54,14 +54,14 @@ async function storePointsTable(competition_id) {
     } else {
       const pointsTableSchema = new mongoose.Schema(
         {},
-        { strict: false, timestamps: true }
+        { strict: false, timestamps: true },
       );
       pointsTableModel = mongoose.model(collectionName, pointsTableSchema);
     }
     const responseTable = await pointsTableModel.findOneAndUpdate(
       { cid: comp_id },
-      { $set: pointsTable, updatedAt : new Date() },
-      { upsert: true, new: true }
+      { $set: pointsTable, updatedAt: new Date() },
+      { upsert: true, new: true },
     );
     console.log(`${activity} Points table updated/created for cid: ${comp_id}`);
 
@@ -88,7 +88,7 @@ async function storeAllPointsTables() {
 
     if (!seriesStatus) {
       console.log(
-        `${activity} Error occured while fetching current live series ${error.message}`
+        `${activity} Error occured while fetching current live series ${error.message}`,
       );
       return res.status(seriesStatusCode).send({
         status: seriesStatus,
@@ -101,7 +101,7 @@ async function storeAllPointsTables() {
   } catch (error) {
     console.log(
       `${activity} Error occured while storing all points tables `,
-      error
+      error,
     );
   }
 }
@@ -123,6 +123,5 @@ cron.schedule("15 23 * * *", async () => {
   await storeAllPointsTables();
   console.log("✅ storePointsTable Cron job completed.");
 });
-
 
 module.exports = { storeCricRanking, storePointsTable, storeAllPointsTables };
